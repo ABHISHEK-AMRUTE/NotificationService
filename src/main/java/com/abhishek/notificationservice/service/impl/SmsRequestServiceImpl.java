@@ -19,6 +19,7 @@ public class SmsRequestServiceImpl implements SmsRequestService {
 
     @Override
     public ResponseEntity<String> sendSms(SmsRequest smsRequest) {
+
         smsRequestRepository.save(smsRequest);
         return new ResponseEntity<String>("sample", HttpStatus.ACCEPTED);
     }
