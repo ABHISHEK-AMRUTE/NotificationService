@@ -1,18 +1,88 @@
 package com.abhishek.notificationservice.kafka;
 
+import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
+import com.abhishek.notificationservice.repository.PhoneNumberRepository;
+import com.abhishek.notificationservice.repository.RedisRepository;
+import com.abhishek.notificationservice.repository.SmsRequestRepository;
+import com.abhishek.notificationservice.service.PhoneNumberService;
+import com.abhishek.notificationservice.util.enums.PhoneNumberStatusEnum;
+import com.abhishek.notificationservice.util.enums.SmsStatusEnum;
+import org.apache.kafka.common.protocol.types.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 @Service
 public class KafkaConsumer {
 
     private  static  final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumer.class);
+    private RedisRepository redisRepository;
+    private SmsRequestRepository smsRequestRepository;
+    private PhoneNumberRepository phoneNumberRepository;
+    private PhoneNumberService phoneNumberService;
 
+    public KafkaConsumer(RedisRepository redisRepository, SmsRequestRepository smsRequestRepository, PhoneNumberRepository phoneNumberRepository,  PhoneNumberService phoneNumberService) {
+        this.redisRepository = redisRepository;
+        this.smsRequestRepository = smsRequestRepository;
+        this.phoneNumberRepository = phoneNumberRepository;
+        this.phoneNumberService = phoneNumberService;
+    }
+
+    private Boolean getNumberBlockStatus(String phoneNumber){
+        PhoneNumberStatusEnum redisResponse = redisRepository.getPhoneNumberStatus(phoneNumber);
+        if( redisResponse == PhoneNumberStatusEnum.BLACKLISTED ) return true;
+        else if( redisResponse == PhoneNumberStatusEnum.WHITELISTED ) return false;
+         else {
+             // cache miss or null response, get from db and update in redis
+             // get number from db if present
+            PhoneNumber phoneNumberFromDB = phoneNumberService.getPhoneNumber(phoneNumber);
+            if( phoneNumberFromDB == null )
+            {
+                // Phone Number is not in the DB we will insert it
+
+                phoneNumberFromDB = new PhoneNumber();
+                phoneNumberFromDB.setPhoneNumber(phoneNumber);
+                phoneNumberFromDB.setStatus(PhoneNumberStatusEnum.WHITELISTED);
+                phoneNumberService.savePhoneNumber( phoneNumberFromDB);
+                System.out.println("Here is the updated one");
+                System.out.println(phoneNumberFromDB);
+            }
+            // update the number in redis
+            redisRepository.savePhoneNumber(phoneNumber);
+            return false;
+        }
+
+    }
     @KafkaListener(topics = "smsRequest", groupId = "myGroup")
     public void consume(SmsRequest message){
         LOGGER.info(String.format("Message recieved %s", message));
+
+        /**
+         * Check if the number is in the redis ( populate if not found )
+         * Check if the number is whitelisted or blacklisted
+         * insert the phoneNumber in DB and redis if not found
+         * save in SQL and send to SMS via third party
+         *
+         */
+        Boolean isNumberBlackListed = getNumberBlockStatus(message.getPhoneNumber());
+
+        if( isNumberBlackListed ){
+
+            message.setStatus( SmsStatusEnum.FAILED );
+            message.setFailure_comments("Number is blackListed");
+            message.setFailure_code("123");
+        } else {
+            message.setStatus( SmsStatusEnum.SENT );
+        }
+
+        message.setCreated_at(new Date());
+        message.setUpdated_at(new Date());
+
+        smsRequestRepository.save(message);
+
     }
 }

@@ -18,6 +18,11 @@ public class SmsRequestServiceImpl implements SmsRequestService {
     }
 
     @Override
+    public SmsRequest getSmsRequestById(Long id) {
+        return smsRequestRepository.findById(id).get();
+    }
+
+    @Override
     public ResponseEntity<String> sendSms(SmsRequest smsRequest) {
 
         smsRequestRepository.save(smsRequest);

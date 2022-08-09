@@ -7,4 +7,5 @@ import org.springframework.stereotype.Service;
 @Service
 public interface SmsRequestService {
     ResponseEntity<String> sendSms(SmsRequest smsRequest);
+    SmsRequest getSmsRequestById( Long id );
 }

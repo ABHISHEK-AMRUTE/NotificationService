@@ -1,5 +1,6 @@
 package com.abhishek.notificationservice.model.entity.mysql;
 
+import com.abhishek.notificationservice.util.enums.SmsStatusEnum;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -22,6 +23,8 @@ public class SmsRequest {
     private String phoneNumber;
 
     private String message;
+
+    private SmsStatusEnum status;
 
     private String failure_code;
 
