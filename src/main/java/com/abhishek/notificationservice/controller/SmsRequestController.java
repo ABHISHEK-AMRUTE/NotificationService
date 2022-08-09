@@ -3,6 +3,8 @@ package com.abhishek.notificationservice.controller;
 import com.abhishek.notificationservice.kafka.KafkaProducer;
 import com.abhishek.notificationservice.model.PhoneNumberPayload;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
+import com.abhishek.notificationservice.model.entity.redis.PhoneNumberRedis;
+import com.abhishek.notificationservice.repository.RedisRepository;
 import com.abhishek.notificationservice.service.SmsRequestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,12 @@ public class SmsRequestController {
     private SmsRequestService smsRequestService;
     private KafkaProducer kafkaProducer;
 
-    public SmsRequestController(SmsRequestService smsRequestService, KafkaProducer kafkaProducer) {
+    private RedisRepository redisRepository;
+
+    public SmsRequestController(SmsRequestService smsRequestService, KafkaProducer kafkaProducer, RedisRepository redisRepository) {
         this.smsRequestService = smsRequestService;
         this.kafkaProducer = kafkaProducer;
+        this.redisRepository = redisRepository;
     }
 
     @PostMapping("/v1/sms/send")
@@ -31,11 +36,12 @@ public class SmsRequestController {
         // add the phone number to redis
         // add the phone number to the MQSql DB
         // return appropriate response
-//        phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
-//            PhoneNumberRedis phoneNumberRedis = new PhoneNumberRedis( phoneNumber,"sample");
-//            phoneNumberRedis.setPhoneNumber(phoneNumber);
-//        });
-        return new ResponseEntity<>("", HttpStatus.ACCEPTED);
+        phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
+            PhoneNumberRedis phoneNumberRedis = new PhoneNumberRedis( phoneNumber,"sample");
+            System.out.println(phoneNumberRedis);
+            redisRepository.savePhoneNumber(phoneNumberRedis);
+        });
+        return new ResponseEntity<>("Success", HttpStatus.ACCEPTED);
 
     }
 
