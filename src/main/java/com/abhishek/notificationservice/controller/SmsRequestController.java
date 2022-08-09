@@ -1,6 +1,7 @@
 package com.abhishek.notificationservice.controller;
 
 import com.abhishek.notificationservice.kafka.KafkaProducer;
+import com.abhishek.notificationservice.model.ErrorResponse;
 import com.abhishek.notificationservice.model.PhoneNumberPayload;
 import com.abhishek.notificationservice.model.Response;
 import com.abhishek.notificationservice.model.SmsResponse;
@@ -28,16 +29,31 @@ public class SmsRequestController {
 
     @PostMapping("/v1/sms/send")
     public ResponseEntity<Response> sendSms(@RequestBody SmsRequest smsRequest ){
-        kafkaProducer.sendMessage( smsRequest );
         Response response = new Response();
-        response.setData(new SmsResponse("1234", "Successfully sent"));
+        try {
+            kafkaProducer.sendMessage( smsRequest );
+            response.setData(new SmsResponse("1234", "Successfully sent"));
+        } catch (Exception exception){
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setCode(String.valueOf(exception.hashCode()));
+            errorResponse.setMessage(exception.getMessage());
+            response.setError(errorResponse);
+        }
         return new ResponseEntity<>(response,HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/v1/sms/{id}")
     public ResponseEntity<Response> getSmsDetailsById(@PathVariable Long id){
         Response response = new Response();
-        response.setData( smsRequestService.getSmsRequestById(id) );
+
+        try {
+            response.setData( smsRequestService.getSmsRequestById(id) );
+        }catch (Exception exception){
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setCode(String.valueOf(exception.hashCode()));
+            errorResponse.setMessage(exception.getMessage());
+            response.setError(errorResponse);
+        }
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 

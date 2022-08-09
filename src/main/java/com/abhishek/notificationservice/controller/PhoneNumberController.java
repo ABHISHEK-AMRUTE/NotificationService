@@ -1,5 +1,6 @@
 package com.abhishek.notificationservice.controller;
 
+import com.abhishek.notificationservice.model.ErrorResponse;
 import com.abhishek.notificationservice.model.PhoneNumberPayload;
 import com.abhishek.notificationservice.model.Response;
 import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
@@ -31,41 +32,65 @@ public class PhoneNumberController {
 
     @PostMapping("/v1/blacklist")
     public ResponseEntity<Response> blackListNumber(@RequestBody PhoneNumberPayload phoneNumberPayload){
-        phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
 
-            redisRepository.blackListPhoneNumber(phoneNumber);
-            PhoneNumber phoneNumber1 = new PhoneNumber();
-            phoneNumber1.setPhoneNumber(phoneNumber);
-            phoneNumber1.setStatus(PhoneNumberStatusEnum.BLACKLISTED);
-            phoneNumberService.updatePhoneNumber(phoneNumber1);
-
-        });
         Response response = new Response();
-        response.setData("Successfully blacklisted");
-        return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
+        try {
+            phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
 
+                redisRepository.blackListPhoneNumber(phoneNumber);
+                PhoneNumber phoneNumber1 = new PhoneNumber();
+                phoneNumber1.setPhoneNumber(phoneNumber);
+                phoneNumber1.setStatus(PhoneNumberStatusEnum.BLACKLISTED);
+                phoneNumberService.updatePhoneNumber(phoneNumber1);
+
+            });
+
+            response.setData("Successfully blacklisted");
+
+        } catch( Exception exception ) {
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setCode(String.valueOf(exception.hashCode()));
+            errorResponse.setMessage(exception.getMessage());
+            response.setError(errorResponse);
+        }
+        return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
     }
 
     @DeleteMapping("/v1/blacklist")
     public ResponseEntity<Response> whiteListNumber( @RequestBody PhoneNumberPayload phoneNumberPayload){
-        phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
 
-            redisRepository.whiteListPhoneNumber(phoneNumber);
-            PhoneNumber phoneNumber1 = new PhoneNumber();
-            phoneNumber1.setPhoneNumber(phoneNumber);
-            phoneNumber1.setStatus(PhoneNumberStatusEnum.WHITELISTED);
-            phoneNumberService.updatePhoneNumber(phoneNumber1);
-
-        });
         Response response = new Response();
-        response.setData("Successfully Whitelisted");
+        try {
+            phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
+
+                redisRepository.whiteListPhoneNumber(phoneNumber);
+                PhoneNumber phoneNumber1 = new PhoneNumber();
+                phoneNumber1.setPhoneNumber(phoneNumber);
+                phoneNumber1.setStatus(PhoneNumberStatusEnum.WHITELISTED);
+                phoneNumberService.updatePhoneNumber(phoneNumber1);
+
+            });
+            response.setData("Successfully Whitelisted");
+        } catch( Exception exception ){
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setCode(String.valueOf(exception.hashCode()));
+            errorResponse.setMessage(exception.getMessage());
+            response.setError(errorResponse);
+        }
         return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/v1/blacklist")
     public ResponseEntity<Response> getBlackListedNumbers() {
         Response response = new Response();
-        response.setData(phoneNumberService.getAllBlockedNumbers());
+        try {
+            response.setData(phoneNumberService.getAllBlockedNumbers());
+        }catch( Exception exception){
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setCode(String.valueOf(exception.hashCode()));
+            errorResponse.setMessage(exception.getMessage());
+            response.setError(errorResponse);
+        }
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 }
