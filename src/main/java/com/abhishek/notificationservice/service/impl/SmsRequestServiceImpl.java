@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SmsRequestServiceImpl implements SmsRequestService {
 
-    private SmsRequestRepository smsRequestRepository;
+    private final SmsRequestRepository smsRequestRepository;
 
     public SmsRequestServiceImpl(SmsRequestRepository smsRequestRepository) {
         super();
