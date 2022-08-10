@@ -46,9 +46,7 @@ public class PhoneNumberController {
             response.setData("Successfully blacklisted");
 
         } catch( Exception exception ) {
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setCode(String.valueOf(exception.hashCode()));
-            errorResponse.setMessage(exception.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
             response.setError(errorResponse);
         }
         return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
@@ -70,9 +68,7 @@ public class PhoneNumberController {
             });
             response.setData("Successfully Whitelisted");
         } catch( Exception exception ){
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setCode(String.valueOf(exception.hashCode()));
-            errorResponse.setMessage(exception.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
             response.setError(errorResponse);
         }
         return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
@@ -84,9 +80,7 @@ public class PhoneNumberController {
         try {
             response.setData(phoneNumberService.getAllBlockedNumbers());
         }catch( Exception exception){
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setCode(String.valueOf(exception.hashCode()));
-            errorResponse.setMessage(exception.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
             response.setError(errorResponse);
         }
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);

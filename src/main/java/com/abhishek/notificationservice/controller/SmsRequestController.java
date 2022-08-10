@@ -32,9 +32,7 @@ public class SmsRequestController {
             kafkaProducer.sendMessage( smsRequest );
             response.setData(new SmsResponse("1234", "Successfully sent"));
         } catch (Exception exception){
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setCode(String.valueOf(exception.hashCode()));
-            errorResponse.setMessage(exception.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
             response.setError(errorResponse);
         }
         return new ResponseEntity<>(response,HttpStatus.ACCEPTED);
@@ -47,9 +45,7 @@ public class SmsRequestController {
         try {
             response.setData( smsRequestService.getSmsRequestById(id) );
         }catch (Exception exception){
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setCode(String.valueOf(exception.hashCode()));
-            errorResponse.setMessage(exception.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
             response.setError(errorResponse);
         }
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
