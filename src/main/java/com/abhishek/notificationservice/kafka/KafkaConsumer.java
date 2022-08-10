@@ -75,6 +75,9 @@ public class KafkaConsumer {
             message.setFailure_comments("Number is blackListed");
             message.setFailure_code("123");
         } else {
+            /**
+             * #todo Logic to send the SMS
+             */
             message.setStatus( SmsStatusEnum.SENT );
         }
 
