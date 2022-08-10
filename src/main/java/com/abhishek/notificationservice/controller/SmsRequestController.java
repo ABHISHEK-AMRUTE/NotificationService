@@ -19,12 +19,10 @@ public class SmsRequestController {
     private SmsRequestService smsRequestService;
     private KafkaProducer kafkaProducer;
 
-    private RedisRepository redisRepository;
 
-    public SmsRequestController(SmsRequestService smsRequestService, KafkaProducer kafkaProducer, RedisRepository redisRepository) {
+    public SmsRequestController(SmsRequestService smsRequestService, KafkaProducer kafkaProducer) {
         this.smsRequestService = smsRequestService;
         this.kafkaProducer = kafkaProducer;
-        this.redisRepository = redisRepository;
     }
 
     @PostMapping("/v1/sms/send")

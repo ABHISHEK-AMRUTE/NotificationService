@@ -1,11 +1,9 @@
 package com.abhishek.notificationservice.model.entity.mysql;
 
-import com.abhishek.notificationservice.util.enums.PhoneNumberStatusEnum;
+import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.redis.core.RedisHash;
 
 import javax.persistence.*;
 

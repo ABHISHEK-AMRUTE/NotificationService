@@ -1,6 +1,6 @@
 package com.abhishek.notificationservice.repository;
 
-import com.abhishek.notificationservice.util.enums.PhoneNumberStatusEnum;
+import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

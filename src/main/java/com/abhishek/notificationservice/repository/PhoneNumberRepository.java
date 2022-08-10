@@ -1,7 +1,7 @@
 package com.abhishek.notificationservice.repository;
 
 import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
-import com.abhishek.notificationservice.util.enums.PhoneNumberStatusEnum;
+import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -3,7 +3,7 @@ package com.abhishek.notificationservice.service.impl;
 import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
 import com.abhishek.notificationservice.repository.PhoneNumberRepository;
 import com.abhishek.notificationservice.service.PhoneNumberService;
-import com.abhishek.notificationservice.util.enums.PhoneNumberStatusEnum;
+import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

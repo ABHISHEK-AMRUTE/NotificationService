@@ -1,4 +1,4 @@
-package com.abhishek.notificationservice.util.enums;
+package com.abhishek.notificationservice.utils.enums;
 
 public enum PhoneNumberStatusEnum {
     WHITELISTED,
