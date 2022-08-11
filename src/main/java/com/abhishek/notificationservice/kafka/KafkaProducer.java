@@ -12,15 +12,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class KafkaProducer {
     private static  final Logger LOGGER = LoggerFactory.getLogger(KafkaProducer.class);
-    private final KafkaTemplate<String, SmsRequest> kafkaTemplate;
+    private final KafkaTemplate<String, Long> kafkaTemplate;
 
-    public KafkaProducer(KafkaTemplate<String, SmsRequest> kafkaTemplate) {
+    public KafkaProducer(KafkaTemplate<String, Long> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void sendMessage( SmsRequest message){
-        LOGGER.info(String.format("Message sent %s", message));
-        Message<SmsRequest> message1 = MessageBuilder.withPayload(message).setHeader(KafkaHeaders.TOPIC, "smsRequest").build();
+    public void sendMessage( Long requestId){
+        LOGGER.info(String.format("Message sent %s", requestId));
+        Message<Long> message1 = MessageBuilder.withPayload(requestId).setHeader(KafkaHeaders.TOPIC, "smsRequest").build();
         kafkaTemplate.send(message1);
     }
 }

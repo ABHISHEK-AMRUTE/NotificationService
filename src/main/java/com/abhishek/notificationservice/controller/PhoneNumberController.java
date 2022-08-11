@@ -52,6 +52,7 @@ public class PhoneNumberController {
         return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
     }
 
+
     @DeleteMapping("/v1/blacklist")
     public ResponseEntity<Response> whiteListNumber( @RequestBody PhoneNumberPayload phoneNumberPayload){
 

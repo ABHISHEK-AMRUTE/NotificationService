@@ -6,6 +6,7 @@ import com.abhishek.notificationservice.repository.PhoneNumberRepository;
 import com.abhishek.notificationservice.repository.RedisRepository;
 import com.abhishek.notificationservice.repository.SmsRequestRepository;
 import com.abhishek.notificationservice.service.PhoneNumberService;
+import com.abhishek.notificationservice.service.SmsRequestService;
 import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
 import com.abhishek.notificationservice.utils.enums.SmsStatusEnum;
 import org.slf4j.Logger;
@@ -23,12 +24,15 @@ public class KafkaConsumer {
     private SmsRequestRepository smsRequestRepository;
     private PhoneNumberRepository phoneNumberRepository;
     private PhoneNumberService phoneNumberService;
+    private SmsRequestService smsRequestService;
 
-    public KafkaConsumer(RedisRepository redisRepository, SmsRequestRepository smsRequestRepository, PhoneNumberRepository phoneNumberRepository,  PhoneNumberService phoneNumberService) {
+
+    public KafkaConsumer(RedisRepository redisRepository, SmsRequestRepository smsRequestRepository, PhoneNumberRepository phoneNumberRepository,  PhoneNumberService phoneNumberService, SmsRequestService smsRequestService) {
         this.redisRepository = redisRepository;
         this.smsRequestRepository = smsRequestRepository;
         this.phoneNumberRepository = phoneNumberRepository;
         this.phoneNumberService = phoneNumberService;
+        this.smsRequestService = smsRequestService;
     }
 
     private Boolean getNumberBlockStatus(String phoneNumber){
@@ -57,20 +61,18 @@ public class KafkaConsumer {
 
     }
     @KafkaListener(topics = "smsRequest", groupId = "myGroup")
-    public void consume(SmsRequest message){
+    public void consume( Long requestId ){
+        SmsRequest message = smsRequestService.getSmsRequestById(requestId);
         LOGGER.info(String.format("Message recieved %s", message));
-
         /**
          * Check if the number is in the redis ( populate if not found )
          * Check if the number is whitelisted or blacklisted
          * insert the phoneNumber in DB and redis if not found
          * save in SQL and send to SMS via third party
-         *
          */
         Boolean isNumberBlackListed = getNumberBlockStatus(message.getPhoneNumber());
 
         if( isNumberBlackListed ){
-
             message.setStatus( SmsStatusEnum.FAILED );
             message.setFailure_comments("Number is blackListed");
             message.setFailure_code("123");
@@ -80,11 +82,8 @@ public class KafkaConsumer {
              */
             message.setStatus( SmsStatusEnum.SENT );
         }
-
         message.setCreated_at(new Date());
         message.setUpdated_at(new Date());
-
         smsRequestRepository.save(message);
-
     }
 }

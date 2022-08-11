@@ -29,8 +29,9 @@ public class SmsRequestController {
     public ResponseEntity<Response> sendSms(@RequestBody SmsRequest smsRequest ){
         Response response = new Response();
         try {
-            kafkaProducer.sendMessage( smsRequest );
-            response.setData(new SmsResponse("1234", "Successfully sent"));
+            SmsRequest smsRequest1 = smsRequestService.saveSmsRequest(smsRequest);
+            kafkaProducer.sendMessage( smsRequest1.getId() );
+            response.setData(new SmsResponse(String.valueOf(smsRequest1.getId()), "Successfully sent"));
         } catch (Exception exception){
             ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
             response.setError(errorResponse);
