@@ -1,11 +1,13 @@
 package com.abhishek.notificationservice.kafka;
 
+import com.abhishek.notificationservice.model.entity.elasticSearch.SmsRequestElastic;
 import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
 import com.abhishek.notificationservice.repository.PhoneNumberRepository;
 import com.abhishek.notificationservice.repository.RedisRepository;
 import com.abhishek.notificationservice.repository.SmsRequestRepository;
 import com.abhishek.notificationservice.service.PhoneNumberService;
+import com.abhishek.notificationservice.service.SmsRequestElasticService;
 import com.abhishek.notificationservice.service.SmsRequestService;
 import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
 import com.abhishek.notificationservice.utils.enums.SmsStatusEnum;
@@ -25,14 +27,16 @@ public class KafkaConsumer {
     private PhoneNumberRepository phoneNumberRepository;
     private PhoneNumberService phoneNumberService;
     private SmsRequestService smsRequestService;
+    private SmsRequestElasticService smsRequestElasticService;
 
 
-    public KafkaConsumer(RedisRepository redisRepository, SmsRequestRepository smsRequestRepository, PhoneNumberRepository phoneNumberRepository,  PhoneNumberService phoneNumberService, SmsRequestService smsRequestService) {
+    public KafkaConsumer(RedisRepository redisRepository, SmsRequestRepository smsRequestRepository, PhoneNumberRepository phoneNumberRepository,  PhoneNumberService phoneNumberService, SmsRequestService smsRequestService,  SmsRequestElasticService smsRequestElasticService) {
         this.redisRepository = redisRepository;
         this.smsRequestRepository = smsRequestRepository;
         this.phoneNumberRepository = phoneNumberRepository;
         this.phoneNumberService = phoneNumberService;
         this.smsRequestService = smsRequestService;
+        this.smsRequestElasticService = smsRequestElasticService;
     }
 
     private Boolean getNumberBlockStatus(String phoneNumber){
@@ -85,5 +89,8 @@ public class KafkaConsumer {
         message.setCreated_at(new Date());
         message.setUpdated_at(new Date());
         smsRequestRepository.save(message);
+        //index to the elastic search
+        SmsRequestElastic smsRequestElastic = new SmsRequestElastic(message);
+         smsRequestElasticService.save(smsRequestElastic);
     }
 }
