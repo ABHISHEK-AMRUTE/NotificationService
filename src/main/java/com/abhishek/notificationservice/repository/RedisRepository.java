@@ -9,11 +9,9 @@ import org.springframework.stereotype.Repository;
 
 public class RedisRepository {
    private HashOperations hashOperations;
-   private RedisTemplate redisTemplate;
 
    public RedisRepository(RedisTemplate redisTemplate) {
       this.hashOperations = redisTemplate.opsForHash();
-      this.redisTemplate = redisTemplate;
    }
 
    public void savePhoneNumber(String phoneNumberRedis){

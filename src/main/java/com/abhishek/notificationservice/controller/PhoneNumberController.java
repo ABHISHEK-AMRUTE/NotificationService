@@ -22,7 +22,6 @@ public class PhoneNumberController {
     RedisService redisService;
     PhoneNumberService phoneNumberService;
 
-
     public PhoneNumberController(PhoneNumberService phoneNumberService, RedisService redisService) {
         this.phoneNumberService = phoneNumberService;
         this.redisService = redisService;

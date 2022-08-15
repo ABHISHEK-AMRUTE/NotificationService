@@ -20,7 +20,7 @@ public class KafkaProducer {
 
     public void sendMessage( Long requestId){
         LOGGER.info(String.format("Message sent %s", requestId));
-        Message<Long> message1 = MessageBuilder.withPayload(requestId).setHeader(KafkaHeaders.TOPIC, "smsRequest").build();
+        Message<Long> message1 = MessageBuilder.withPayload(requestId).setHeader(KafkaHeaders.TOPIC, "notification.send_sms").build();
         kafkaTemplate.send(message1);
     }
 }

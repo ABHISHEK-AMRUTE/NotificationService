@@ -1,12 +1,10 @@
 package com.abhishek.notificationservice.kafka;
 
-import com.abhishek.notificationservice.model.entity.elasticSearch.SmsRequestElastic;
+import com.abhishek.notificationservice.model.entity.elasticSearch.SmsRequestESDocument;
 import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
-import com.abhishek.notificationservice.repository.PhoneNumberRepository;
-import com.abhishek.notificationservice.repository.RedisRepository;
-import com.abhishek.notificationservice.repository.SmsRequestRepository;
 import com.abhishek.notificationservice.service.PhoneNumberService;
+import com.abhishek.notificationservice.service.RedisService;
 import com.abhishek.notificationservice.service.SmsRequestElasticService;
 import com.abhishek.notificationservice.service.SmsRequestService;
 import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
@@ -22,25 +20,23 @@ import java.util.Date;
 public class KafkaConsumer {
 
     private  static  final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumer.class);
-    private RedisRepository redisRepository;
-    private SmsRequestRepository smsRequestRepository;
-    private PhoneNumberRepository phoneNumberRepository;
+
     private PhoneNumberService phoneNumberService;
     private SmsRequestService smsRequestService;
     private SmsRequestElasticService smsRequestElasticService;
+    private RedisService redisService;
 
+    public KafkaConsumer(PhoneNumberService phoneNumberService, SmsRequestService smsRequestService,  SmsRequestElasticService smsRequestElasticService, RedisService redisService) {
 
-    public KafkaConsumer(RedisRepository redisRepository, SmsRequestRepository smsRequestRepository, PhoneNumberRepository phoneNumberRepository,  PhoneNumberService phoneNumberService, SmsRequestService smsRequestService,  SmsRequestElasticService smsRequestElasticService) {
-        this.redisRepository = redisRepository;
-        this.smsRequestRepository = smsRequestRepository;
-        this.phoneNumberRepository = phoneNumberRepository;
         this.phoneNumberService = phoneNumberService;
         this.smsRequestService = smsRequestService;
         this.smsRequestElasticService = smsRequestElasticService;
+        this.redisService = redisService;
+
     }
 
     private Boolean getNumberBlockStatus(String phoneNumber){
-        PhoneNumberStatusEnum redisResponse = redisRepository.getPhoneNumberStatus(phoneNumber);
+        PhoneNumberStatusEnum redisResponse = redisService.getPhoneNumberStatus(phoneNumber);
         if( redisResponse == PhoneNumberStatusEnum.BLACKLISTED ) return true;
         else if( redisResponse == PhoneNumberStatusEnum.WHITELISTED ) return false;
          else {
@@ -59,12 +55,12 @@ public class KafkaConsumer {
                 System.out.println(phoneNumberFromDB);
             }
             // update the number in redis
-            redisRepository.savePhoneNumber(phoneNumber);
+            redisService.savePhoneNumber(phoneNumber);
             return false;
         }
 
     }
-    @KafkaListener(topics = "smsRequest", groupId = "myGroup")
+    @KafkaListener(topics = "notification.send_sms", groupId = "myGroup")
     public void consume( Long requestId ){
         SmsRequest message = smsRequestService.getSmsRequestById(requestId);
         LOGGER.info(String.format("Message recieved %s", message));
@@ -88,9 +84,9 @@ public class KafkaConsumer {
         }
         message.setCreated_at(new Date());
         message.setUpdated_at(new Date());
-        smsRequestRepository.save(message);
+        smsRequestService.saveSmsRequest(message);
         //index to the elastic search
-        SmsRequestElastic smsRequestElastic = new SmsRequestElastic(message);
-         smsRequestElasticService.save(smsRequestElastic);
+        SmsRequestESDocument smsRequestESDocument = new SmsRequestESDocument(message);
+         smsRequestElasticService.save(smsRequestESDocument);
     }
 }

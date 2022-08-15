@@ -9,6 +9,6 @@ import org.springframework.kafka.config.TopicBuilder;
 public class KafkaTopicConfig {
     @Bean
     public NewTopic smsRequestTopic(){
-        return TopicBuilder.name("smsRequest").build();
+        return TopicBuilder.name("notification.send_sms").build();
     }
 }

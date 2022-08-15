@@ -36,4 +36,9 @@ public class SmsRequest {
     @LastModifiedDate
     private Date updated_at;
 
+    public SmsRequest() {
+        this.created_at = new Date();
+        this.updated_at = new Date();
+    }
+
 }

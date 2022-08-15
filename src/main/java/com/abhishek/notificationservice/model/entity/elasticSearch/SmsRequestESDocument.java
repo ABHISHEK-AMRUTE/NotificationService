@@ -1,18 +1,15 @@
 package com.abhishek.notificationservice.model.entity.elasticSearch;
 
+import com.abhishek.notificationservice.controller.SmsRequestController;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
 import com.abhishek.notificationservice.utils.enums.SmsStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.dialect.FirebirdDialect;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.util.Date;
 
@@ -20,7 +17,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SmsRequestElastic {
+public class SmsRequestESDocument {
     @Id
     private String id;
     @Field( type = FieldType.Long)
@@ -44,9 +41,10 @@ public class SmsRequestElastic {
     @Field( type = FieldType.Date)
     private Date createdAt;
 
-    private Date updated_at;
+    @Field( type = FieldType.Date)
+    private Date updatedAt;
 
-    public SmsRequestElastic(SmsRequest message) {
+    public SmsRequestESDocument(SmsRequest message) {
         this.smsRequestId = message.getId();
         this.phoneNumber = message.getPhoneNumber();
         this.message = message.getMessage();
@@ -54,7 +52,7 @@ public class SmsRequestElastic {
         this.failure_code = message.getFailure_code();
         this.failure_comments = message.getFailure_comments();
         this.createdAt = message.getCreated_at();
-        this.updated_at = message.getUpdated_at();
+        this.updatedAt = message.getUpdated_at();
     }
 
 }
