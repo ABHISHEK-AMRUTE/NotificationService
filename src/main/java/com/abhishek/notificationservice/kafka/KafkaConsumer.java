@@ -62,7 +62,7 @@ public class KafkaConsumer {
         LOGGER.info(String.format("Message recieved %s", requestId));
         SmsRequest message = smsRequestService.getSmsRequestById(requestId);
         // check if the number is blocked or not
-        Boolean isNumberBlackListed = getPhoneNumberBlockStatus("+" + message.getPhoneNumber());
+        Boolean isNumberBlackListed = getPhoneNumberBlockStatus(message.getPhoneNumber());
 
         if( isNumberBlackListed ){
             message.setStatus( SmsStatusEnum.FAILED );
