@@ -35,18 +35,17 @@ public class KafkaConsumer {
 
     }
 
-    private Boolean getNumberBlockStatus(String phoneNumber){
+    private Boolean getPhoneNumberBlockStatus(String phoneNumber){
+        // Check if number is in the redis cache or not
         PhoneNumberStatusEnum redisResponse = redisService.getPhoneNumberStatus(phoneNumber);
         if( redisResponse == PhoneNumberStatusEnum.BLACKLISTED ) return true;
         else if( redisResponse == PhoneNumberStatusEnum.WHITELISTED ) return false;
          else {
-             // cache miss or null response, get from db and update in redis
-             // get number from db if present
+             // If number is not in the redis cache, get it from DB and populate in redis cache.
             PhoneNumber phoneNumberFromDB = phoneNumberService.getPhoneNumber(phoneNumber);
             if( phoneNumberFromDB == null )
             {
-                // Phone Number is not in the DB we will insert it
-
+                // If number is not present in SQL DB then insert it.
                 phoneNumberFromDB = new PhoneNumber();
                 phoneNumberFromDB.setPhoneNumber(phoneNumber);
                 phoneNumberFromDB.setStatus(PhoneNumberStatusEnum.WHITELISTED);
@@ -62,31 +61,28 @@ public class KafkaConsumer {
     }
     @KafkaListener(topics = "notification.send_sms", groupId = "myGroup")
     public void consume( Long requestId ){
+        LOGGER.info(String.format("Message recieved %s", requestId));
         SmsRequest message = smsRequestService.getSmsRequestById(requestId);
-        LOGGER.info(String.format("Message recieved %s", message));
-        /**
-         * Check if the number is in the redis ( populate if not found )
-         * Check if the number is whitelisted or blacklisted
-         * insert the phoneNumber in DB and redis if not found
-         * save in SQL and send to SMS via third party
-         */
-        Boolean isNumberBlackListed = getNumberBlockStatus(message.getPhoneNumber());
+        // check if the number is blocked or not
+        Boolean isNumberBlackListed = getPhoneNumberBlockStatus(message.getPhoneNumber());
 
         if( isNumberBlackListed ){
             message.setStatus( SmsStatusEnum.FAILED );
             message.setFailure_comments("Number is blackListed");
-            message.setFailure_code("123");
+            message.setFailure_code("NUMBER_BLACKLISTED");
         } else {
             /**
              * #todo Logic to send the SMS
              */
             message.setStatus( SmsStatusEnum.SENT );
         }
+        //Save message to SQL DB
         message.setCreated_at(new Date());
         message.setUpdated_at(new Date());
         smsRequestService.saveSmsRequest(message);
-        //index to the elastic search
+
+        //Index the SmsRequest document to the elastic search
         SmsRequestESDocument smsRequestESDocument = new SmsRequestESDocument(message);
-         smsRequestElasticService.save(smsRequestESDocument);
+        smsRequestElasticService.save(smsRequestESDocument);
     }
 }

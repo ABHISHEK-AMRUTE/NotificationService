@@ -1,17 +1,22 @@
 package com.abhishek.notificationservice.controller;
 
 import com.abhishek.notificationservice.kafka.KafkaProducer;
-import com.abhishek.notificationservice.model.ErrorResponse;
-import com.abhishek.notificationservice.model.PhoneNumberPayload;
-import com.abhishek.notificationservice.model.Response;
+import com.abhishek.notificationservice.model.SmsDetailsResponse;
+import com.abhishek.notificationservice.model.SmsErrorResponse;
 import com.abhishek.notificationservice.model.SmsResponse;
+import com.abhishek.notificationservice.model.SmsSuccessResponse;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
-import com.abhishek.notificationservice.repository.RedisRepository;
 import com.abhishek.notificationservice.service.SmsRequestService;
+import com.abhishek.notificationservice.utils.PhoneNumberHelper;
+import org.elasticsearch.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+
+import java.util.NoSuchElementException;
 
 @Controller
 public class SmsRequestController {
@@ -26,30 +31,54 @@ public class SmsRequestController {
     }
 
     @PostMapping("/v1/sms/send")
-    public ResponseEntity<Response> sendSms(@RequestBody SmsRequest smsRequest ){
-        Response response = new Response();
+    public ResponseEntity<SmsResponse> sendSms(@RequestBody SmsRequest smsRequest) {
+
+        SmsResponse smsResponse = new SmsResponse();
+        HttpStatus httpStatus = HttpStatus.ACCEPTED;
+
         try {
+            if (smsRequest.getPhoneNumber() == null && smsRequest.getMessage() == null) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Phone number and message are mandatory");
+            } else if (smsRequest.getPhoneNumber() == null) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Phone number is mandatory");
+            } else if (smsRequest.getMessage() == null) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Message is mandatory");
+            }
+            if (PhoneNumberHelper.isValidPhoneNumber(smsRequest.getPhoneNumber()) == Boolean.FALSE) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Phone number is invalid");
+            }
             SmsRequest smsRequest1 = smsRequestService.saveSmsRequest(smsRequest);
-            kafkaProducer.sendMessage( smsRequest1.getId() );
-            response.setData(new SmsResponse(String.valueOf(smsRequest1.getId()), "Successfully sent"));
-        } catch (Exception exception){
-            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
-            response.setError(errorResponse);
+            kafkaProducer.sendMessage(smsRequest1.getId());
+            smsResponse.setData(new SmsSuccessResponse(String.valueOf(smsRequest1.getId()), "Successfully sent"));
+        } catch (HttpClientErrorException exception) {
+            SmsErrorResponse smsErrorResponse = new SmsErrorResponse(String.valueOf(exception.getStatusCode()), exception.getStatusText());
+            smsResponse.setError(smsErrorResponse);
+            httpStatus = exception.getStatusCode();
+        } catch (Exception exception) {
+            SmsErrorResponse smsErrorResponse = new SmsErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
+            smsResponse.setError(smsErrorResponse);
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return new ResponseEntity<>(response,HttpStatus.ACCEPTED);
+
+        return new ResponseEntity<>(smsResponse, httpStatus);
     }
 
     @GetMapping("/v1/sms/{id}")
-    public ResponseEntity<Response> getSmsDetailsById(@PathVariable Long id){
-        Response response = new Response();
-
+    public ResponseEntity<SmsDetailsResponse> getSmsDetailsById(@PathVariable Long id) {
+        SmsDetailsResponse smsDetailsResponse = new SmsDetailsResponse();
+        HttpStatus httpStatus = HttpStatus.ACCEPTED;
         try {
-            response.setData( smsRequestService.getSmsRequestById(id) );
-        }catch (Exception exception){
-            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
-            response.setError(errorResponse);
+            smsDetailsResponse.setData(smsRequestService.getSmsRequestById(id));
+        } catch (NoSuchElementException exception) {
+            SmsErrorResponse smsErrorResponse = new SmsErrorResponse("INVALID_REQUEST", "request_id not found");
+            smsDetailsResponse.setError(smsErrorResponse);
+            httpStatus = HttpStatus.NOT_FOUND;
+        } catch (Exception exception) {
+            SmsErrorResponse smsErrorResponse = new SmsErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
+            smsDetailsResponse.setError(smsErrorResponse);
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(smsDetailsResponse, httpStatus);
     }
 
 }

@@ -1,22 +1,24 @@
 package com.abhishek.notificationservice.controller;
 
-import com.abhishek.notificationservice.model.ErrorResponse;
+import com.abhishek.notificationservice.model.SmsErrorResponse;
 import com.abhishek.notificationservice.model.PhoneNumberPayload;
-import com.abhishek.notificationservice.model.Response;
+import com.abhishek.notificationservice.model.SmsResponse;
+import com.abhishek.notificationservice.model.BlackListResponse;
 import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
-import com.abhishek.notificationservice.repository.RedisRepository;
 import com.abhishek.notificationservice.service.PhoneNumberService;
 import com.abhishek.notificationservice.service.RedisService;
+import com.abhishek.notificationservice.utils.PhoneNumberHelper;
 import com.abhishek.notificationservice.utils.enums.PhoneNumberStatusEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
+@Slf4j
 @Controller
+@RequestMapping("/v1/blacklist")
 public class PhoneNumberController {
 
     RedisService redisService;
@@ -27,13 +29,17 @@ public class PhoneNumberController {
         this.redisService = redisService;
     }
 
-    @PostMapping("/v1/blacklist")
-    public ResponseEntity<Response> blackListNumber(@RequestBody PhoneNumberPayload phoneNumberPayload){
+    @PostMapping
+    public ResponseEntity<BlackListResponse> blackListNumber(@RequestBody PhoneNumberPayload phoneNumberPayload) {
 
-        Response response = new Response();
+        BlackListResponse blackListResponse = new BlackListResponse();
+        HttpStatus httpStatus = HttpStatus.ACCEPTED;
         try {
             phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
 
+                if (PhoneNumberHelper.isValidPhoneNumber(phoneNumber) == Boolean.FALSE) {
+                    throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, String.format("Phone Number %s is not valid", phoneNumber));
+                }
                 redisService.blackListPhoneNumber(phoneNumber);
                 PhoneNumber phoneNumber1 = new PhoneNumber();
                 phoneNumber1.setPhoneNumber(phoneNumber);
@@ -42,23 +48,29 @@ public class PhoneNumberController {
 
             });
 
-            response.setData("Successfully blacklisted");
+            blackListResponse.setData("Successfully blacklisted");
 
-        } catch( Exception exception ) {
-            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
-            response.setError(errorResponse);
+        } catch (HttpClientErrorException exception) {
+            blackListResponse.setError(exception.getStatusText());
+            httpStatus = exception.getStatusCode();
+        } catch (Exception exception) {
+            blackListResponse.setError(exception.getMessage());
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(blackListResponse, httpStatus);
     }
 
 
-    @DeleteMapping("/v1/blacklist")
-    public ResponseEntity<Response> whiteListNumber( @RequestBody PhoneNumberPayload phoneNumberPayload){
+    @DeleteMapping
+    public ResponseEntity<BlackListResponse> whiteListNumber(@RequestBody PhoneNumberPayload phoneNumberPayload) {
 
-        Response response = new Response();
+        BlackListResponse blackListResponse = new BlackListResponse();
+        HttpStatus httpStatus = HttpStatus.ACCEPTED;
         try {
             phoneNumberPayload.getPhoneNumbers().forEach(phoneNumber -> {
-
+                if (PhoneNumberHelper.isValidPhoneNumber(phoneNumber) == Boolean.FALSE) {
+                    throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, String.format("Phone Number %s is not valid", phoneNumber));
+                }
                 redisService.whiteListPhoneNumber(phoneNumber);
                 PhoneNumber phoneNumber1 = new PhoneNumber();
                 phoneNumber1.setPhoneNumber(phoneNumber);
@@ -66,23 +78,28 @@ public class PhoneNumberController {
                 phoneNumberService.updatePhoneNumber(phoneNumber1);
 
             });
-            response.setData("Successfully Whitelisted");
-        } catch( Exception exception ){
-            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
-            response.setError(errorResponse);
+            blackListResponse.setData("Successfully Whitelisted");
+        } catch (HttpClientErrorException exception) {
+            blackListResponse.setError(exception.getStatusText());
+            httpStatus = exception.getStatusCode();
+        } catch (Exception exception) {
+            blackListResponse.setError(exception.getMessage());
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return new ResponseEntity<Response>( response, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(blackListResponse, httpStatus);
     }
 
-    @GetMapping("/v1/blacklist")
-    public ResponseEntity<Response> getBlackListedNumbers() {
-        Response response = new Response();
+    @GetMapping
+    public ResponseEntity<BlackListResponse> getBlackListedNumbers() {
+
+        BlackListResponse blackListResponse = new BlackListResponse();
+        HttpStatus httpStatus = HttpStatus.ACCEPTED;
         try {
-            response.setData(phoneNumberService.getAllBlockedNumbers());
-        }catch( Exception exception){
-            ErrorResponse errorResponse = new ErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
-            response.setError(errorResponse);
+            blackListResponse.setData(phoneNumberService.getAllBlockedNumbers());
+        } catch (Exception exception) {
+            blackListResponse.setError(exception.getMessage());
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(blackListResponse, httpStatus);
     }
 }
