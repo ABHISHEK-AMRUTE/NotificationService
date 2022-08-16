@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class ImiResponseBody {
-    private int status;
+    private int code;
     private String description;
     private String transid;
 }

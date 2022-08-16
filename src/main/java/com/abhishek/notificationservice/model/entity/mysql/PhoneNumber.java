@@ -17,6 +17,5 @@ public class PhoneNumber {
     @GeneratedValue( strategy = GenerationType.IDENTITY)
     private Long Id;
     private String phoneNumber;
-    // default value is whitelisted
     private PhoneNumberStatusEnum status = PhoneNumberStatusEnum.WHITELISTED;
 }

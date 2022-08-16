@@ -2,6 +2,7 @@ package com.abhishek.notificationservice.kafka;
 
 import com.abhishek.notificationservice.model.ImiConnect.request.ImiConnectRequest;
 import com.abhishek.notificationservice.model.ImiConnect.response.ImiConnectResponse;
+import com.abhishek.notificationservice.model.ImiConnect.response.ImiResponseBody;
 import com.abhishek.notificationservice.model.entity.elasticSearch.SmsRequestESDocument;
 import com.abhishek.notificationservice.model.entity.mysql.PhoneNumber;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
@@ -71,19 +72,14 @@ public class KafkaConsumer {
 
     }
 
-    private Object sendSmsNotification(ImiConnectRequest imiConnectRequest) {
+    private ImiConnectResponse sendSmsNotification(ImiConnectRequest imiConnectRequest){
         String url = "https://api.imiconnect.in/resources/v1/messaging";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("key", imiConnectKey);
 
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("body", imiConnectRequest);
-
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-        Object response = this.restTemplate.postForEntity(url, entity, Object.class).getBody();
+        HttpEntity<ImiConnectRequest> entity = new HttpEntity<>(imiConnectRequest, headers);
+        ImiConnectResponse response = this.restTemplate.postForEntity(url, entity, ImiConnectResponse.class).getBody();
         return response;
     }
     @KafkaListener(topics = "notification.send_sms", groupId = "myGroup")
@@ -101,23 +97,25 @@ public class KafkaConsumer {
 
             ImiConnectRequest imiConnectRequest = new ImiConnectRequest();
             imiConnectRequest.getChannels().getSms().setText( message.getMessage() );
-            imiConnectRequest.getDestinations().setMsisdn(Arrays.asList(message.getPhoneNumber()));
-            imiConnectRequest.getDestinations().setCorrelationId("12345");
-
-            Object imiConnectResponse = sendSmsNotification(imiConnectRequest);
-//            if(Object.getResponse().getStatus() != 1001){
-//                message.setStatus( SmsStatusEnum.FAILED );
-//                message.setFailure_code(String.valueOf(imiConnectResponse.getResponse().getStatus()));
-//                message.setFailure_comments(imiConnectResponse.getResponse().getDescription());
-//            } else {
-                message.setStatus( SmsStatusEnum.SENT );
-//            }
+            imiConnectRequest.getDestination().get(0).setMsisdn(Arrays.asList(message.getPhoneNumber()));
+            imiConnectRequest.getDestination().get(0).setCorrelationId("12345");
 
 
+            try {
+                ImiConnectResponse imiConnectResponse = sendSmsNotification(imiConnectRequest);
+                if( imiConnectResponse.getResponse() instanceof List<?>){
+                    message.setStatus(SmsStatusEnum.SENT);
+                }else{
+                    ImiResponseBody imiResponseBody = (ImiResponseBody) imiConnectResponse.getResponse();
+                    message.setStatus(SmsStatusEnum.FAILED);
+                    message.setFailure_code(String.valueOf(imiResponseBody.getCode()));
+                    message.setFailure_comments(imiResponseBody.getDescription());
+                }
+            }catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
         }
-        //Save message to SQL DB
-        message.setCreated_at(new Date());
-        message.setUpdated_at(new Date());
+        // save the sms to the DB
         smsRequestService.saveSmsRequest(message);
 
         //Index the SmsRequest document to the elastic search

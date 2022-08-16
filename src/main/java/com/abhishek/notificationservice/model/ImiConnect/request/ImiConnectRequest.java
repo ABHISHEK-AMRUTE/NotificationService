@@ -2,18 +2,21 @@ package com.abhishek.notificationservice.model.ImiConnect.request;
 
 import lombok.Data;
 
+import java.util.Collections;
+import java.util.List;
+
 @Data
 public class ImiConnectRequest {
 
-    private String deliveryChannel;
+    private String deliverychannel;
 
     private ImiChannels channels;
 
-    private ImiDestination destinations;
+    private List<ImiDestination> destination;
 
     public ImiConnectRequest(){
-        this.deliveryChannel = "sms";
+        this.deliverychannel = "sms";
         this.channels = new ImiChannels();
-        this.destinations = new ImiDestination();
+        this.destination = Collections.singletonList(new ImiDestination());
     }
 }
