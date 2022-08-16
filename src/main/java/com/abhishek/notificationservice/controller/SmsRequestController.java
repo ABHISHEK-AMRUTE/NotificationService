@@ -9,6 +9,7 @@ import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
 import com.abhishek.notificationservice.service.SmsRequestService;
 import com.abhishek.notificationservice.utils.PhoneNumberHelper;
 import com.abhishek.notificationservice.utils.enums.SmsStatusEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.NoSuchElementException;
-
+@Slf4j
 @Controller
 public class SmsRequestController {
 
@@ -56,12 +57,15 @@ public class SmsRequestController {
             SmsErrorResponse smsErrorResponse = new SmsErrorResponse(String.valueOf(exception.getStatusCode()), exception.getStatusText());
             smsResponse.setError(smsErrorResponse);
             httpStatus = exception.getStatusCode();
+            log.info("Error while sending message: {}, due to : {}", smsRequest, exception.getStatusText() );
         } catch (Exception exception) {
             SmsErrorResponse smsErrorResponse = new SmsErrorResponse(String.valueOf(exception.hashCode()), exception.getMessage());
             smsResponse.setError(smsErrorResponse);
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            log.info("Error while sending message: {}, due to : {}", smsRequest, exception.getMessage() );
         }
 
+        log.info("Sent the sms for processing:{} ", smsRequest);
         return new ResponseEntity<>(smsResponse, httpStatus);
     }
 

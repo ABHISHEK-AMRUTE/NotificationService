@@ -53,10 +53,13 @@ public class PhoneNumberController {
         } catch (HttpClientErrorException exception) {
             blackListResponse.setError(exception.getStatusText());
             httpStatus = exception.getStatusCode();
+            log.info("Error while blacklisting numbers: {}, due to: {}", phoneNumberPayload, exception.getStatusText()) ;
         } catch (Exception exception) {
             blackListResponse.setError(exception.getMessage());
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            log.info("Error while blacklisting numbers: {}, due to: {}", phoneNumberPayload, exception.getMessage()) ;
         }
+        log.info("Blacklisted all the numbers in: {}", phoneNumberPayload) ;
         return new ResponseEntity<>(blackListResponse, httpStatus);
     }
 
@@ -82,10 +85,13 @@ public class PhoneNumberController {
         } catch (HttpClientErrorException exception) {
             blackListResponse.setError(exception.getStatusText());
             httpStatus = exception.getStatusCode();
+            log.info("Error while whitelisting numbers: {}, due to: {}", phoneNumberPayload, exception.getStatusText()) ;
         } catch (Exception exception) {
             blackListResponse.setError(exception.getMessage());
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            log.info("Error while whitelisting numbers: {}, due to: {}", phoneNumberPayload, exception.getMessage()) ;
         }
+        log.info("WhiteListed all the numbers in: {}", phoneNumberPayload) ;
         return new ResponseEntity<>(blackListResponse, httpStatus);
     }
 
