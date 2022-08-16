@@ -8,6 +8,7 @@ import com.abhishek.notificationservice.model.SmsSuccessResponse;
 import com.abhishek.notificationservice.model.entity.mysql.SmsRequest;
 import com.abhishek.notificationservice.service.SmsRequestService;
 import com.abhishek.notificationservice.utils.PhoneNumberHelper;
+import com.abhishek.notificationservice.utils.enums.SmsStatusEnum;
 import org.elasticsearch.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,7 @@ public class SmsRequestController {
             if (PhoneNumberHelper.isValidPhoneNumber(smsRequest.getPhoneNumber()) == Boolean.FALSE) {
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Phone number is invalid");
             }
+            smsRequest.setStatus(SmsStatusEnum.UNDER_PROCESSING);
             SmsRequest smsRequest1 = smsRequestService.saveSmsRequest(smsRequest);
             kafkaProducer.sendMessage(smsRequest1.getId());
             smsResponse.setData(new SmsSuccessResponse(String.valueOf(smsRequest1.getId()), "Successfully sent"));

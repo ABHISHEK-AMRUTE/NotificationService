@@ -50,8 +50,6 @@ public class KafkaConsumer {
                 phoneNumberFromDB.setPhoneNumber(phoneNumber);
                 phoneNumberFromDB.setStatus(PhoneNumberStatusEnum.WHITELISTED);
                 phoneNumberService.savePhoneNumber( phoneNumberFromDB);
-                System.out.println("Here is the updated one");
-                System.out.println(phoneNumberFromDB);
             }
             // update the number in redis
             redisService.savePhoneNumber(phoneNumber);
@@ -64,7 +62,7 @@ public class KafkaConsumer {
         LOGGER.info(String.format("Message recieved %s", requestId));
         SmsRequest message = smsRequestService.getSmsRequestById(requestId);
         // check if the number is blocked or not
-        Boolean isNumberBlackListed = getPhoneNumberBlockStatus(message.getPhoneNumber());
+        Boolean isNumberBlackListed = getPhoneNumberBlockStatus("+" + message.getPhoneNumber());
 
         if( isNumberBlackListed ){
             message.setStatus( SmsStatusEnum.FAILED );
