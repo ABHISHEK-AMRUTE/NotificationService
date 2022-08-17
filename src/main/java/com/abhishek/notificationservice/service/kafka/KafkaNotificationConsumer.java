@@ -131,7 +131,7 @@ public class KafkaNotificationConsumer {
                     ImiConnectResponse imiConnectResponse = sendSmsNotification(imiConnectRequest);
                     if( imiConnectResponse.getResponse() instanceof List<?>){
                         message.setStatus(SmsStatusEnum.SENT);
-                    }else{
+                     }else{
                         ImiResponseBody imiResponseBody = (ImiResponseBody) imiConnectResponse.getResponse();
                         message.setStatus(SmsStatusEnum.FAILED);
                         message.setFailure_code(String.valueOf(imiResponseBody.getCode()));

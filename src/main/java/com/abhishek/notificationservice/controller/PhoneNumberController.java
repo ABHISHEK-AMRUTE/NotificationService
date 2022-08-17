@@ -91,14 +91,15 @@ public class PhoneNumberController {
                     throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, String.format("Phone Number %s is not valid", phoneNumber));
                 }
 
-                //update in redis
-                redisService.whiteListPhoneNumber(phoneNumber);
 
                 //Update in SQL DB
                 PhoneNumber phoneNumber1 = new PhoneNumber();
                 phoneNumber1.setPhoneNumber(phoneNumber);
                 phoneNumber1.setStatus(PhoneNumberStatusEnum.WHITELISTED);
                 phoneNumberService.updatePhoneNumber(phoneNumber1);
+
+                //update in redis
+                redisService.whiteListPhoneNumber(phoneNumber);
 
             });
             blackListResponse.setData("Successfully Whitelisted");
