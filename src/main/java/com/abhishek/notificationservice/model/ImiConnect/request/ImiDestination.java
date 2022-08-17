@@ -7,4 +7,7 @@ import java.util.List;
 public class ImiDestination {
     private List<String> msisdn;
     private String correlationId;
+    public ImiDestination(){
+        this.correlationId = "1234";
+    }
 }

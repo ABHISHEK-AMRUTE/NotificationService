@@ -16,6 +16,9 @@ public class PhoneNumberServiceImpl implements PhoneNumberService {
         this.phoneNumberRepository = phoneNumberRepository;
     }
 
+    /**
+     * Get PhoneNumber details by phoneNumber
+     */
     @Override
     public PhoneNumber getPhoneNumber(String phoneNumber) {
         List<PhoneNumber> responseList = phoneNumberRepository.findByPhoneNumber(phoneNumber);
@@ -23,6 +26,9 @@ public class PhoneNumberServiceImpl implements PhoneNumberService {
         return responseList.get(0);
     }
 
+    /**
+     * Get details of all the blocked phone numbers
+     */
     @Override
     public List<String> getAllBlockedNumbers() {
         List<String>  phoneNumbers =  new ArrayList<>();
@@ -30,6 +36,9 @@ public class PhoneNumberServiceImpl implements PhoneNumberService {
         return phoneNumbers;
     }
 
+    /**
+     * Update the phoneNumber details in DB
+     */
     @Override
     public void updatePhoneNumber(PhoneNumber phoneNumber) {
         PhoneNumber existingPhoneNumber = getPhoneNumber(phoneNumber.getPhoneNumber());
@@ -44,6 +53,9 @@ public class PhoneNumberServiceImpl implements PhoneNumberService {
 
     }
 
+    /**
+     * Save the new phoneNumber details in DB
+     */
     @Override
     public PhoneNumber savePhoneNumber(PhoneNumber phoneNumber) {
         return phoneNumberRepository.save(phoneNumber);

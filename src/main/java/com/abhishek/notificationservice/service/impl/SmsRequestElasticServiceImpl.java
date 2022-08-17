@@ -26,17 +26,26 @@ public class SmsRequestElasticServiceImpl implements SmsRequestElasticService {
         this.elasticsearchTemplate = elasticsearchTemplate;
     }
 
+    /**
+     * Index the smsRequest document
+     */
     @Override
     public void save(SmsRequestESDocument smsRequestESDocument) {
         elasticsearchRepository.save(smsRequestESDocument);
     }
 
+    /**
+     * @return  all the matching SMSRequest, which contains text in its message.
+     */
     @Override
     public List<SmsRequestESDocument> findById(String text, int pageNumber, int pageSize) {
         List<SmsRequestESDocument> page = elasticsearchRepository.findByMessage(text, PageRequest.of(pageNumber,pageSize));
             return page;
     }
 
+    /**
+     * @return all the matching SmsRequest, have phone number equals to phoneNumber, between date dateFrom to dateTo.
+     */
     @Override
     public List<SmsRequestESDocument> findByPhoneNumber(String phoneNumber, Date dateFrom, Date dateTo, int page, int pageSize) {
         return  elasticsearchRepository.findByPhoneNumberAndCreatedAtAfterAndCreatedAtBefore(phoneNumber, dateFrom, dateTo, PageRequest.of(page,pageSize));
